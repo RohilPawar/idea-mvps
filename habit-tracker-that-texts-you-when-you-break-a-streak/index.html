@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Streakbreaker</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --line: #2a2f3a;
+    --text: #e8eaf0;
+    --muted: #8b93a5;
+    --accent: #4ade80;
+    --danger: #f8716a;
+    --flame: #ffb057;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .stage {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* ---------- app ---------- */
+  .app { width: 380px; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -0.3px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 4px 0 22px; }
+
+  .clock {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 14px; margin-bottom: 14px;
+  }
+  .clock .day { font-size: 13px; color: var(--muted); }
+  .clock .day b { color: var(--text); font-weight: 600; }
+  .btn {
+    font: inherit; font-size: 13px; font-weight: 600;
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--line); border-radius: 7px;
+    padding: 7px 12px; cursor: pointer;
+  }
+  .btn:hover { border-color: #3b4252; background: #242935; }
+  .btn.primary { background: var(--accent); color: #0b2216; border-color: transparent; }
+  .btn.primary:hover { background: #63e894; }
+
+  .habit {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px; margin-bottom: 10px;
+    transition: border-color .2s, background .2s;
+  }
+  .habit.broke { border-color: rgba(248,113,106,.45); background: #1d1618; }
+  .check {
+    width: 26px; height: 26px; flex: 0 0 26px;
+    border: 2px solid var(--line); border-radius: 50%;
+    background: none; cursor: pointer; color: transparent;
+    font-size: 14px; line-height: 1; display: grid; place-items: center;
+  }
+  .check:hover { border-color: var(--accent); }
+  .check.on { background: var(--accent); border-color: var(--accent); color: #0b2216; }
+  .habit .name { font-weight: 600; }
+  .habit .meta { font-size: 12px; color: var(--muted); }
+  .habit .grow { flex: 1; min-width: 0; }
+  .streak { font-size: 14px; font-weight: 700; color: var(--flame); white-space: nowrap; }
+  .streak.zero { color: var(--muted); }
+  .del { background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:0 2px; }
+  .del:hover { color: var(--danger); }
+
+  form { display: flex; gap: 8px; margin-top: 16px; }
+  input, select {
+    font: inherit; background: var(--panel); color: var(--text);
+    border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
+  }
+  input { flex: 1; min-width: 0; }
+  input::placeholder { color: #5f6779; }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+
+  /* ---------- phone ---------- */
+  .phone {
+    width: 300px; background: #000; border-radius: 38px;
+    padding: 12px; border: 1px solid #2c2c2e; flex: 0 0 auto;
+  }
+  .screen {
+    background: #0b0b0d; border-radius: 28px; height: 500px;
+    padding: 16px 12px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .notch { width: 70px; height: 5px; background: #2c2c2e; border-radius: 3px; margin: 2px auto 12px; }
+  .sms-hdr { text-align: center; color: #6e7280; font-size: 11px; letter-spacing: .4px; }
+  .empty { color: #4c505c; font-size: 13px; text-align: center; margin: auto 10px; line-height: 1.6; }
+  .bubble {
+    background: #26272b; color: #f2f2f4; border-radius: 18px 18px 18px 5px;
+    padding: 10px 14px; font-size: 14px; max-width: 88%;
+    animation: pop .32s cubic-bezier(.2,.9,.3,1.2);
+  }
+  .bubble .ts { display: block; color: #74777f; font-size: 10px; margin-top: 5px; }
+  @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.95); } }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="app">
+    <h1>Streakbreaker</h1>
+    <p class="sub">Check in daily. Miss one, and your phone hears about it.</p>
+
+    <div class="clock">
+      <span class="day">Today is <b id="today"></b></span>
+      <button class="btn" id="advance">Skip to tomorrow &rarr;</button>
+    </div>
+
+    <div id="list"></div>
+
+    <form id="add">
+      <input id="name" placeholder="New habit, e.g. Run 2 miles" maxlength="40" required>
+      <select id="sched">
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+      </select>
+      <button class="btn primary" type="submit">Add</button>
+    </form>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen" id="screen">
+      <div class="sms-hdr">Streakbreaker &middot; SMS</div>
+      <div class="empty" id="empty">No texts yet.<br>Leave a habit unchecked and hit
+        &ldquo;Skip to tomorrow.&rdquo;</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ---- mock data: day 0 is "today" ----
+let day = 0;
+let habits = [
+  { id: 1, name: "Morning run",     schedule: "daily",  streak: 5, doneOn: -1 },
+  { id: 2, name: "Read 20 pages",   schedule: "daily",  streak: 12, doneOn: 0 },
+  { id: 3, name: "Call mom",        schedule: "weekly", streak: 3, doneOn: -1 },
+];
+let nextId = 4;
+const broke = new Set(); // habit ids that just broke, for the red flash
+
+const START = new Date(2026, 8, 29); // Sep 29, 2026
+const fmtDay = d => new Date(START.getTime() + d * 864e5)
+  .toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+const fmtTime = d => new Date(START.getTime() + d * 864e5)
+  .toLocaleDateString("en-US", { month: "numeric", day: "numeric" }) + ", 11:59 PM";
+
+const list = document.getElementById("list");
+const screen = document.getElementById("screen");
+
+function render() {
+  document.getElementById("today").textContent = fmtDay(day);
+  list.innerHTML = "";
+  habits.forEach(h => {
+    const done = h.doneOn === day;
+    const row = document.createElement("div");
+    row.className = "habit" + (broke.has(h.id) ? " broke" : "");
+    row.innerHTML = `
+      <button class="check ${done ? "on" : ""}" title="Mark done today">&#10003;</button>
+      <div class="grow">
+        <div class="name">${esc(h.name)}</div>
+        <div class="meta">${h.schedule === "daily" ? "Every day" : "Once a week"}</div>
+      </div>
+      <span class="streak ${h.streak ? "" : "zero"}">${h.streak ? "&#128293; " + h.streak : "0"}</span>
+      <button class="del" title="Remove">&times;</button>`;
+    row.querySelector(".check").onclick = () => {
+      h.doneOn = done ? -1 : day;
+      h.streak += done ? -1 : 1;          // live streak update
+      if (!done) broke.delete(h.id);
+      render();
+    };
+    row.querySelector(".del").onclick = () => {
+      habits = habits.filter(x => x.id !== h.id);
+      render();
+    };
+    list.appendChild(row);
+  });
+}
+
+// ---- this is the "cron job + edge function", running client-side ----
+function advanceDay() {
+  // a daily habit breaks after one missed day; a weekly one gets a 7-day window
+  const missed = habits.filter(h =>
+    h.streak > 0 && h.doneOn !== day &&
+    (h.schedule === "daily" || day - h.doneOn > 6));
+  broke.clear();
+  missed.forEach(h => {
+    text(`You missed ${h.name} — your ${h.streak}-day streak just broke. Restart today!`, day);
+    h.streak = 0;                          // reset, mirrored in the UI
+    broke.add(h.id);
+  });
+  day++;
+  render();
+}
+
+function text(body, onDay) {
+  document.getElementById("empty")?.remove();
+  const b = document.createElement("div");
+  b.className = "bubble";
+  b.innerHTML = esc(body) + `<span class="ts">${fmtTime(onDay)}</span>`;
+  screen.appendChild(b);
+  screen.scrollTop = screen.scrollHeight;
+}
+
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+document.getElementById("advance").onclick = advanceDay;
+document.getElementById("add").onsubmit = e => {
+  e.preventDefault();
+  const name = document.getElementById("name");
+  habits.push({ id: nextId++, name: name.value.trim(), schedule: document.getElementById("sched").value, streak: 0, doneOn: -1 });
+  name.value = "";
+  render();
+};
+
+render();
+</script>
+</body>
+</html>
