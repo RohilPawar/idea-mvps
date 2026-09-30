@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Founder Feed — Pre-Seed Signals</title>
+<style>
+  :root {
+    --ink: #1a1815;
+    --ink-soft: #4a463f;
+    --paper: #f7f4ec;
+    --paper-2: #efeadf;
+    --line: #d9d2c4;
+    --accent: #8a3324;
+    --accent-soft: #b5654d;
+    --good: #2f6b4f;
+    --mid: #a8791f;
+    --low: #9a6a6a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 22px 80px; }
+  header.masthead {
+    border-bottom: 3px double var(--ink);
+    padding-bottom: 18px;
+    margin-bottom: 8px;
+  }
+  .kicker {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    font-size: 11px;
+    color: var(--accent);
+    margin: 0 0 6px;
+  }
+  h1.title {
+    font-size: 46px;
+    line-height: 1.02;
+    margin: 0 0 6px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .dek {
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 17px;
+    margin: 0;
+    max-width: 640px;
+  }
+  .byline {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 10px;
+  }
+
+  /* Stats bar */
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border: 1px solid var(--line);
+    background: var(--paper-2);
+    margin: 22px 0;
+  }
+  .stat {
+    flex: 1 1 120px;
+    padding: 14px 18px;
+    border-right: 1px solid var(--line);
+    text-align: center;
+  }
+  .stat:last-child { border-right: none; }
+  .stat .num {
+    font-size: 30px;
+    font-weight: 700;
+    display: block;
+    line-height: 1;
+  }
+  .stat .lbl {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-soft);
+    margin-top: 6px;
+  }
+
+  /* Filters */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 22px;
+    align-items: flex-end;
+    padding: 16px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 6px;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+  }
+  select, input[type=range] {
+    font-family: Georgia, serif;
+    font-size: 14px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 6px 8px;
+    color: var(--ink);
+    border-radius: 2px;
+  }
+  .rangewrap { display: flex; align-items: center; gap: 8px; }
+  .rangewrap output {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 12px;
+    min-width: 24px;
+  }
+  .checkfield {
+    flex-direction: row;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 13px;
+    padding-bottom: 6px;
+  }
+  .checkfield input { width: 16px; height: 16px; accent-color: var(--accent); }
+  .reset {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    background: none;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    padding: 7px 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    margin-bottom: 4px;
+  }
+  .reset:hover { background: var(--ink); color: var(--paper); }
+
+  /* Section heads */
+  .sec-head {
+    font-size: 13px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink-soft);
+    margin: 34px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .sec-head::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* Table */
+  .feed { width: 100%; border-collapse: collapse; }
+  .feed thead th {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-soft);
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .feed th.rank, .feed th.score { text-align: center; }
+  .row-main {
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .row-main:hover { background: var(--paper-2); }
+  .row-main td { padding: 12px 10px; vertical-align: top; }
+  .rank-cell {
+    text-align: center;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--accent);
+    width: 42px;
+  }
+  .co-name { font-weight: 700; font-size: 16px; }
+  .co-what { font-size: 13px; color: var(--ink-soft); font-style: italic; margin-top: 2px; }
+  .meta-line {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+    letter-spacing: 0.02em;
+  }
+  .tag {
+    display: inline-block;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: 1px solid var(--line);
+    padding: 2px 7px;
+    border-radius: 2px;
+    background: var(--paper);
+  }
+  .newbadge {
+    background: var(--accent);
+    color: var(--paper);
+    border-color: var(--accent);
+    margin-left: 6px;
+  }
+  .score-cell { text-align: center; width: 70px; }
+  .score-num {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .score-good { color: var(--good); }
+  .score-mid { color: var(--mid); }
+  .score-low { color: var(--low); }
+  .caret {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 6px;
+  }
+
+  /* Expanded panel */
+  .row-detail td { padding: 0; border-bottom: 1px solid var(--line); background: var(--paper-2); }
+  .detail-inner { padding: 20px 22px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .detail-grid { grid-template-columns: 1fr; } }
+  .panel-h {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  .reason { margin-bottom: 12px; }
+  .reason-top { display: flex; justify-content: space-between; align-items: baseline; }
+  .reason-label { font-weight: 700; font-size: 14px; }
+  .reason-pts {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 12px;
+    color: var(--good);
+    font-weight: 700;
+  }
+  .reason-desc { font-size: 13px; color: var(--ink-soft); }
+  .bar {
+    height: 6px;
+    background: var(--line);
+    border-radius: 3px;
+    margin-top: 5px;
+    overflow: hidden;
+  }
+  .bar > span { display: block; height: 100%; background: var(--accent-soft); }
+  .btn {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 10px 16px;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .btn:hover { background: var(--accent); }
+  .btn.ghost { background: none; color: var(--ink); border: 1px solid var(--ink); }
+  .btn.ghost:hover { background: var(--ink); color: var(--paper); }
+
+  /* Memo */
+  .memo {
+    margin-top: 18px;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    padding: 22px;
+    display: none;
+  }
+  .memo.show { display: block; }
+  .memo h3 {
+    font-size: 22px;
+    margin: 0 0 2px;
+  }
+  .memo .memo-sub {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+  }
+  .memo p { font-size: 14px; margin: 8px 0; }
+  .memo .label {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    margin-top: 16px;
+    margin-bottom: 4px;
+  }
+  .email-box {
+    border-left: 3px solid var(--accent);
+    background: var(--paper-2);
+    padding: 14px 16px;
+    font-size: 13.5px;
+    white-space: pre-wrap;
+    line-height: 1.55;
+  }
+  .memo-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .copied-note {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 12px;
+    color: var(--good);
+    align-self: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .copied-note.show { opacity: 1; }
+
+  /* Kanban */
+  .board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-top: 10px;
+  }
+  @media (max-width: 800px) { .board { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .board { grid-template-columns: 1fr; } }
+  .col {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--ink);
+    min-height: 160px;
+    padding: 10px;
+  }
+  .col.drag-over { background: #e7dfcc; border-top-color: var(--accent); }
+  .col-title {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .col-count { color: var(--accent); font-weight: 700; }
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 9px 11px;
+    margin-bottom: 8px;
+    cursor: grab;
+    border-radius: 2px;
+  }
+  .card:active { cursor: grabbing; }
+  .card.dragging { opacity: 0.45; }
+  .card .c-name { font-weight: 700; font-size: 14px; }
+  .card .c-meta {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 10px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+  .card .c-score {
+    float: right;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--accent);
+  }
+  .empty-hint {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-style: italic;
+    text-align: center;
+    padding: 14px 4px;
+    opacity: 0.7;
+  }
+  footer {
+    margin-top: 50px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+  }
+  .no-results {
+    padding: 30px;
+    text-align: center;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <p class="kicker">Pre-Seed Intelligence · Early Access</p>
+    <h1 class="title">The Founder Feed</h1>
+    <p class="dek">A ranked, filterable ledger of the week's most promising founder signals — sourced, scored, and ready for first contact.</p>
+    <p class="byline">Compiled for Pre-Seed Partners · Week of Sept. 28, 2026</p>
+  </header>
+
+  <section class="stats" id="stats"></section>
+
+  <div class="filters">
+    <div class="field">
+      <label for="f-sector">Sector</label>
+      <select id="f-sector"><option value="">All sectors</option></select>
+    </div>
+    <div class="field">
+      <label for="f-state">State</label>
+      <select id="f-state"><option value="">All states</option></select>
+    </div>
+    <div class="field">
+      <label for="f-score">Min. score: <output id="f-score-out">0</output></label>
+      <div class="rangewrap">
+        <input type="range" id="f-score" min="0" max="100" value="0" step="5">
+      </div>
+    </div>
+    <div class="field checkfield">
+      <input type="checkbox" id="f-new">
+      <label for="f-new" style="letter-spacing:0.04em;">New this week only</label>
+    </div>
+    <button class="reset" id="reset">Reset</button>
+  </div>
+
+  <div class="sec-head">Ranked Signals</div>
+  <table class="feed">
+    <thead>
+      <tr>
+        <th class="rank">#</th>
+        <th>Company &amp; Signal</th>
+        <th class="score">Score</th>
+      </tr>
+    </thead>
+    <tbody id="feed-body"></tbody>
+  </table>
+  <div class="no-results" id="no-results" style="display:none;">No signals match these filters.</div>
+
+  <div class="sec-head">Pipeline Board</div>
+  <p style="font-size:13px;color:var(--ink-soft);font-style:italic;margin:0 0 12px;">Drag any founder card between stages. Your board is saved automatically.</p>
+  <div class="board" id="board"></div>
+
+  <footer>
+    Founder Feed — an editorial prototype. All data is illustrative. No backend, no network calls. Built for demonstration.
+  </footer>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
