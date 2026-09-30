@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RoomSplit — Utility Allocation for Co-Living</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --line: #2b313d;
+    --text: #e8ebf0;
+    --muted: #949cab;
+    --accent: #5b8cff;
+    --accent-soft: #1d2a4d;
+    --good: #3fbf7f;
+    --good-soft: #14301f;
+    --warn: #e0a33e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  header {
+    border-bottom: 1px solid var(--line);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--panel);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .brand { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+  .brand span { color: var(--accent); }
+  .tabs { margin-left: auto; display: flex; gap: 6px; }
+  .tab {
+    padding: 7px 14px;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font: inherit;
+  }
+  .tab.active { background: var(--accent-soft); color: var(--text); border-color: #31456f; }
+  main { max-width: 1060px; margin: 0 auto; padding: 24px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 14px; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+  select, input {
+    width: 100%;
+    padding: 9px 10px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    color: var(--text);
+    font: inherit;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .methods { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+  .method {
+    flex: 1 1 240px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    border-radius: 9px;
+    padding: 11px 13px;
+    cursor: pointer;
+  }
+  .method.sel { border-color: var(--accent); background: var(--accent-soft); }
+  .method b { display: block; font-size: 14px; }
+  .method small { color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; }
+  .formula { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  .vacant { color: var(--warn); }
+  tfoot td { font-weight: 700; border-bottom: none; }
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 11px 22px;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.primary:disabled { background: #2b313d; color: var(--muted); cursor: default; }
+  .row { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+  .badge { font-size: 12px; padding: 3px 9px; border-radius: 20px; background: var(--good-soft); color: var(--good); border: 1px solid #235339; }
+  .badge.pending { background: #2a2418; color: var(--warn); border-color: #4d3d1c; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .hint { background: var(--accent-soft); border: 1px solid #31456f; border-radius: 9px; padding: 11px 14px; font-size: 13px; margin-bottom: 18px; }
+  .hidden { display: none; }
+  .bigmoney { font-size: 22px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Room<span>Split</span></div>
+  <div class="muted">Maple Court Apartments</div>
+  <div class="tabs">
+    <button class="tab active" data-view="manager">Manager Dashboard</button>
+    <button class="tab" data-view="resident">Resident View</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ============ MANAGER ============ -->
+<section id="view-manager">
+  <div class="hint">
+    <b>Try the demo:</b> Unit 2A · Electricity · $240 · Oct 1–31 · Occupancy-based. Jordan Reyes moved out Oct 15,
+    so Bedroom D only carries half the month. Hit <b>Approve</b> and then switch to the Resident View.
+  </div>
+
+  <div class="card">
+    <h2>1 · Bill entry</h2>
+    <div class="grid">
+      <div>
+        <label>Property</label>
+        <select id="f-property"><option>Maple Court Apartments</option></select>
+      </div>
+      <div>
+        <label>Unit</label>
+        <select id="f-unit"></select>
+      </div>
+      <div>
+        <label>Utility type</label>
+        <select id="f-type">
+          <option>Electricity</option>
+          <option>Water</option>
+          <option>Gas</option>
+          <option>Internet</option>
+        </select>
+      </div>
+      <div>
+        <label>Bill amount (USD)</label>
+        <input id="f-amount" type="number" min="0" step="0.01" value="240.00" />
+      </div>
+      <div>
+        <label>Period start</label>
+        <input id="f-start" type="date" value="2025-10-01" />
+      </div>
+      <div>
+        <label>Period end</label>
+        <input id="f-end" type="date" value="2025-10-31" />
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2 · Allocation method</h2>
+    <div class="methods">
+      <div class="method sel" data-method="equal">
+        <b>Equal split</b>
+        <small>Bill ÷ number of bedrooms. Vacant rooms count as the owner's cost.</small>
+      </div>
+      <div class="method" data-method="occupancy">
+        <b>Occupancy-based proration</b>
+        <small>Each bedroom pays in proportion to the nights it was occupied during the period.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>3 · Calculated charges</h2>
+    <div id="calc-wrap"></div>
+    <div class="row">
+      <button class="primary" id="btn-approve">Approve &amp; post charges</button>
+      <span id="approve-note" class="muted"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Approved bill history</h2>
+    <div id="mgr-history"></div>
+  </div>
+</section>
+
+<!-- ============ RESIDENT ============ -->
+<section id="view-resident" class="hidden">
+  <div class="card">
+    <h2>Signed in as</h2>
+    <div class="grid">
+      <div>
+        <label>Resident (mock selector)</label>
+        <select id="f-resident"></select>
+      </div>
+      <div>
+        <label>Balance due</label>
+        <div class="bigmoney" id="res-balance">$0.00</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>My charges</h2>
+    <div id="res-table"></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+/* ---------------- Seed data ---------------- */
+const PROPERTY = { id: 'p1', name: 'Maple Court Apartments' };
+
+const UNITS = [
+  {
+    id: 'u1', name: 'Unit 2A',
+    bedrooms: [
+      { id: 'A', label: 'Bedroom A', resident: 'Amara Okafor',  moveIn: '2025-01-15', moveOut: null },
+      { id: 'B', label: 'Bedroom B', resident: 'Ben Whitfield', moveIn: '2025-03-01', moveOut: null },
+      { id: 'C', label: 'Bedroom C', resident: 'Chen Liu',      moveIn: '2024-09-01', moveOut: null },
+      { id: 'D', label: 'Bedroom D', resident: 'Jordan Reyes',  moveIn: '2025-02-01', moveOut: '2025-10-15' }
+    ]
+  },
+  {
+    id: 'u2', name: 'Unit 2B',
+    bedrooms: [
+      { id: 'A', label: 'Bedroom A', resident: 'Priya Nair',    moveIn: '2025-05-01', moveOut: null },
+      { id: 'B', label: 'Bedroom B', resident: 'Marcus Hall',   moveIn: '2025-06-10', moveOut: null },
+      { id: 'C', label: 'Bedroom C', resident: 'Sofia Duarte',  moveIn: '2024-11-01', moveOut: null },
+      { id: 'D', label: 'Bedroom D', resident: null,            moveIn: null,         moveOut: null } // vacant
+    ]
+  }
+];
+
+/* A couple of previously-approved bills so the resident view is not empty on first load. */
+let APPROVED = [
+  {
+    id: 'b-seed-1', unitId: 'u1', unitName: 'Unit 2A', type: 'Water',
+    amount: 96, start: '2025-09-01', end: '2025-09-30', method: 'equal',
+    approvedOn: '2025-10-02',
+    lines: UNITS[0].bedrooms.map(b => ({
+      bedroom: b.label, resident: b.resident, days: 30, charge: 24,
+      formula: '$96.00 ÷ 4 bedrooms'
+    }))
+  },
+  {
+    id: 'b-seed-2', unitId: 'u2', unitName: 'Unit 2B', type: 'Electricity',
+    amount: 180, start: '2025-09-01', end: '2025-09-30', method: 'equal',
+    approvedOn: '2025-10-02',
+    lines: UNITS[1].bedrooms.map(b => ({
+      bedroom: b.label, resident: b.resident, days: 30, charge: 45,
+      formula: '$180.00 ÷ 4 bedrooms'
+    }))
+  }
+];
+
+/* ---------------- Helpers ---------------- */
+const $ = s => document.querySelector(s);
+const money = n => '$' + n.toFixed(2);
+const day = s => { const [y,m,d] = s.split('-').map(Number); return Date.UTC(y, m-1, d); };
+const DAY_MS = 86400000;
+
+/* Nights a bedroom was occupied within [start, end], inclusive of both endpoints. */
+function occupiedDays(bed, start, end) {
+  if (!bed.resident) return 0;
+  const from = Math.max(day(start), day(bed.moveIn));
+  const to   = Math.min(day(end), bed.moveOut ? day(bed.moveOut) : day(end));
+  if (to < from) return 0;
+  return Math.round((to - from) / DAY_MS) + 1;
+}
+const periodDays = (start, end) => Math.round((day(end) - day(start)) / DAY_MS) + 1;
+
+/* Round to cents, pushing any leftover penny onto the largest line so the total ties out. */
+function reconcile(raw, total) {
+  const cents = raw.map(v => Math.round(v * 100));
+  let diff = Math.round(total * 100) - cents.reduce((a, b) => a + b, 0);
+  if (diff !== 0) {
+    let idx = 0;
+    cents.forEach((c, i) => { if (c > cents[idx]) idx = i; });
+    cents[idx] += diff;
+  }
+  return cents.map(c => c / 100);
+}
+
+/* ---------------- Calculation ---------------- */
+let method = 'equal';
+let current = null;
+
+function calculate() {
+  const unit = UNITS.find(u => u.id === $('#f-unit').value);
+  const amount = parseFloat($('#f-amount').value);
+  const start = $('#f-start').value, end = $('#f-end').value;
+
+  if (!unit || isNaN(amount) || !start || !end) return { error: 'Fill in every field to see the allocation.' };
+  if (day(end) < day(start)) return { error: 'Period end must fall on or after period start.' };
+
+  const total = periodDays(start, end);
+  const beds = unit.bedrooms.map(b => ({ bed: b, days: occupiedDays(b, start, end) }));
+
+  let raw, formulas;
+  if (method === 'equal') {
+    const n = beds.length;
+    raw = beds.map(() => amount / n);
+    formulas = beds.map(() => `${money(amount)} ÷ ${n} bedrooms`);
+  } else {
+    const bedDays = beds.reduce((a, b) => a + b.days, 0);
+    if (bedDays === 0) return { error: 'No bedroom was occupied during this period — nothing to prorate.' };
+    raw = beds.map(b => amount * b.days / bedDays);
+    formulas = beds.map(b => b.days === 0
+      ? 'vacant for the whole period → $0.00'
+      : `${money(amount)} × ${b.days} / ${bedDays} bed-days`);
+  }
+
+  const charges = reconcile(raw, amount);
+
+  return {
+    unit, amount, start, end, total,
+    lines: beds.map((b, i) => ({
+      bedroom: b.bed.label,
+      resident: b.bed.resident,
+      moveOut: b.bed.moveOut,
+      days: b.days,
+      charge: charges[i],
+      formula: formulas[i]
+    }))
+  };
+}
+
+function renderCalc() {
+  const r = calculate();
+  const wrap = $('#calc-wrap');
+  $('#approve-note').textContent = '';
+
+  if (r.error) {
+    current = null;
+    wrap.innerHTML = `<div class="muted">${r.error}</div>`;
+    $('#btn-approve').disabled = true;
+    return;
+  }
+  current = r;
+  $('#btn-approve').disabled = false;
+
+  const rows = r.lines.map(l => `
+    <tr>
+      <td>${l.bedroom}</td>
+      <td>${l.resident ? l.resident : '<span class="vacant">Vacant</span>'}
+          ${l.moveOut ? `<div class="muted">moved out ${l.moveOut}</div>` : ''}</td>
+      <td class="num">${l.days} / ${r.total}</td>
+      <td class="formula">${l.formula}</td>
+      <td class="num">${money(l.charge)}</td>
+    </tr>`).join('');
+
+  wrap.innerHTML = `
+    <div class="muted" style="margin-bottom:10px">
+      ${r.unit.name} · ${$('#f-type').value} · ${money(r.amount)} · ${r.start} → ${r.end} (${r.total} days) ·
+      ${method === 'equal' ? 'Equal split' : 'Occupancy-based proration'}
+    </div>
+    <table>
+      <thead><tr>
+        <th>Bedroom</th><th>Resident</th><th class="num">Days occupied</th><th>Calculation</th><th class="num">Charge</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr>
+        <td colspan="4">Total allocated</td>
+        <td class="num">${money(r.lines.reduce((a, l) => a + l.charge, 0))}</td>
+      </tr></tfoot>
+    </table>`;
+}
+
+/* ---------------- Approve ---------------- */
+$('#btn-approve').addEventListener('click', () => {
+  if (!current) return;
+  APPROVED.unshift({
+    id: 'b' + (APPROVED.length + 1),
+    unitId: current.unit.id,
+    unitName: current.unit.name,
+    type: $('#f-type').value,
+    amount: current.amount,
+    start: current.start,
+    end: current.end,
+    method,
+    approvedOn: new Date().toISOString().slice(0, 10),
+    lines: current.lines.map(l => ({ bedroom: l.bedroom, resident: l.resident, days: l.days, charge: l.charge, formula: l.formula }))
+  });
+  $('#approve-note').innerHTML = `<span class="badge">Approved</span> Posted to ${current.lines.filter(l => l.resident).length} resident ledgers.`;
+  renderHistory();
+  renderResident();
+});
+
+function renderHistory() {
+  if (!APPROVED.length) { $('#mgr-history').innerHTML = '<div class="muted">No approved bills yet.</div>'; return; }
+  $('#mgr-history').innerHTML = `
+    <table>
+      <thead><tr><th>Unit</th><th>Utility</th><th>Period</th><th>Method</th><th class="num">Amount</th><th>Status</th></tr></thead>
+      <tbody>${APPROVED.map(b => `
+        <tr>
+          <td>${b.unitName}</td><td>${b.type}</td><td>${b.start} → ${b.end}</td>
+          <td>${b.method === 'equal' ? 'Equal split' : 'Occupancy prorated'}</td>
+          <td class="num">${money(b.amount)}</td>
+          <td><span class="badge">Approved ${b.approvedOn}</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+/* ---------------- Resident view ---------------- */
+function allResidents() {
+  const out = [];
+  UNITS.forEach(u => u.bedrooms.forEach(b => { if (b.resident) out.push({ name: b.resident, unit: u.name, bedroom: b.label }); }));
+  return out;
+}
+
+function renderResident() {
+  const who = $('#f-resident').value;
+  const rows = [];
+  APPROVED.forEach(b => b.lines.forEach(l => {
+    if (l.resident === who) rows.push({ bill: b, line: l });
+  }));
+
+  const balance = rows.reduce((a, r) => a + r.line.charge, 0);
+  $('#res-balance').textContent = money(balance);
+
+  if (!rows.length) { $('#res-table').innerHTML = '<div class="muted">No charges yet.</div>'; return; }
+
+  $('#res-table').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Period</th><th>Unit / Bedroom</th><th>Utility</th><th>How it was split</th><th class="num">You owe</th>
+      </tr></thead>
+      <tbody>${rows.map(r => `
+        <tr>
+          <td>${r.bill.start} → ${r.bill.end}<div class="muted">approved ${r.bill.approvedOn}</div></td>
+          <td>${r.bill.unitName} · ${r.line.bedroom}</td>
+          <td>${r.bill.type}</td>
+          <td class="formula">${r.line.formula}</td>
+          <td class="num">${money(r.line.charge)}</td>
+        </tr>`).join('')}
+      </tbody>
+      <tfoot><tr><td colspan="4">Total</td><td class="num">${money(balance)}</td></tr></tfoot>
+    </table>`;
+}
+
+/* ---------------- Wiring ---------------- */
+$('#f-unit').innerHTML = UNITS.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+$('#f-resident').innerHTML = allResidents().map(r => `<option value="${r.name}">${r.name} — ${r.unit}, ${r.bedroom}</option>`).join('');
+
+['#f-unit', '#f-type', '#f-amount', '#f-start', '#f-end'].forEach(s => {
+  $(s).addEventListener('input', renderCalc);
+  $(s).addEventListener('change', renderCalc);
+});
+
+document.querySelectorAll('.method').forEach(el => el.addEventListener('click', () => {
+  document.querySelectorAll('.method').forEach(m => m.classList.remove('sel'));
+  el.classList.add('sel');
+  method = el.dataset.method;
+  renderCalc();
+}));
+
+$('#f-resident').addEventListener('change', renderResident);
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  const isMgr = t.dataset.view === 'manager';
+  $('#view-manager').classList.toggle('hidden', !isMgr);
+  $('#view-resident').classList.toggle('hidden', isMgr);
+  if (!isMgr) renderResident();
+}));
+
+renderCalc();
+renderHistory();
+renderResident();
+</script>
+</body>
+</html>
