@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scope 3 Value-Chain Tracker</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>Scope 3 Value-Chain Tracker</h1>
+  <span class="tag">prototype &middot; sample factors only</span>
+  <span class="spacer"></span>
+  <button id="btnSample" class="ghost">Load Sample</button>
+  <button id="btnReset" class="ghost">Start Over</button>
+</header>
+
+<main>
+
+  <!-- ───────────────── WIZARD ───────────────── -->
+  <section id="wizard" class="card">
+    <div class="steps">
+      <div data-step="1">1 &middot; Company</div>
+      <div data-step="2">2 &middot; Industry</div>
+      <div data-step="3">3 &middot; Product line</div>
+    </div>
+
+    <div class="pane" data-pane="1">
+      <h2>What company are you mapping?</h2>
+      <p class="sub">We'll build a value chain around it.</p>
+      <label for="coName">Company name</label>
+      <input id="coName" placeholder="e.g. Brightleaf Naturals" autocomplete="off">
+    </div>
+
+    <div class="pane hidden" data-pane="2">
+      <h2>Pick an industry</h2>
+      <p class="sub">This sets the default labels on your value-chain stages.</p>
+      <div class="grid8" id="industries"></div>
+      <div id="customWrap" class="hidden" style="margin-top:12px">
+        <label for="customInd">Describe your industry</label>
+        <input id="customInd" placeholder="e.g. specialty packaging" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="pane hidden" data-pane="3">
+      <h2>Add one product line</h2>
+      <p class="sub">Start with a single product — you can expand later.</p>
+      <div class="row">
+        <div>
+          <label for="prodName">Product line</label>
+          <input id="prodName" placeholder="e.g. Herbal Tea Blends" autocomplete="off">
+        </div>
+        <div>
+          <label for="prodUnits">Annual units (optional)</label>
+          <input id="prodUnits" type="number" min="0" placeholder="250000">
+        </div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button id="btnBack" class="ghost">Back</button>
+      <button id="btnNext" class="primary">Next</button>
+    </div>
+  </section>
+
+  <!-- ───────────────── APP ───────────────── -->
+  <section id="app" class="hidden">
+
+    <div class="card">
+      <h2 id="coTitle">Value chain</h2>
+      <p class="sub" id="coMeta"></p>
+      <div class="chain" id="chain"></div>
+      <p class="sub" style="margin:16px 0 0">
+        Click any stage name to rename it. Toggle <b>We own / control this</b> to reclassify the
+        stage between Scope 1&nbsp;&amp;&nbsp;2 (owned) and Scope 3 (value chain).
+      </p>
+    </div>
+
+    <div class="two">
+      <div class="card">
+        <h2>Purchased Goods — Materials Emissions</h2>
+        <p class="sub">Stage: Supply Chain &middot; Scope 3, Category 1</p>
+        <div class="row">
+          <div>
+            <label for="mActivity">Activity data</label>
+            <input id="mActivity" type="number" min="0" step="any" placeholder="e.g. 120000">
+          </div>
+          <div style="max-width:150px">
+            <label for="mUnit">Unit</label>
+            <select id="mUnit">
+              <option value="kg">kg material</option>
+              <option value="t">tonnes material</option>
+              <option value="unit">units produced</option>
+            </select>
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <div>
+            <label for="mFactor">Emission factor (kg CO<sub>2</sub>e per unit)</label>
+            <input id="mFactor" type="number" min="0" step="any" value="2.4">
+          </div>
+        </div>
+        <p style="margin:10px 0 0"><span class="pill">sample factor, not for reporting</span></p>
+
+        <div class="result">
+          Computed: <b id="mPreview">0</b> kg CO<sub>2</sub>e
+        </div>
+        <div class="nav">
+          <button id="btnAddMetric" class="primary">Add metric</button>
+        </div>
+
+        <table id="entriesTable" class="hidden">
+          <thead><tr><th>Activity</th><th>Factor</th><th class="num">kg CO<sub>2</sub>e</th><th></th></tr></thead>
+          <tbody id="entriesBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Scope 3 totals by category</h2>
+        <p class="sub">Updates live as you add metrics.</p>
+        <canvas id="chart" height="260"></canvas>
+        <div class="total" id="grandTotal"></div>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
